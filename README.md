@@ -51,4 +51,4 @@ A 3D game where you control a plane and defend a city against UFOs using Three.j
 - Create start screen
 - Add victory and defeat screens
 - Implement high score system
-- Add visual effects and polish 
+- Add visual effects and polish
