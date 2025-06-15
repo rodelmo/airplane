@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PlaneController } from './PlaneController';
 import { CameraController } from './CameraController';
 import { UI } from './UI';
+import { Howl, Howler } from 'howler';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -227,6 +228,12 @@ let lastShotTime = 0;
 const bulletSpeed = 80;
 const bulletLifetime = 2; // seconds
 
+// --- Sound Effects ---
+const music = new Howl({ src: ['/public/music.mp3'], loop: true, volume: 0.5 });
+const shootSound = new Howl({ src: ['/public/shoot.wav'], volume: 0.5 });
+const explosionSound = new Howl({ src: ['/public/explosion.wav'], volume: 0.7 });
+const victorySound = new Howl({ src: ['/public/victory.wav'], volume: 0.7 });
+
 function shootBullet() {
     const now = performance.now() / 1000;
     if (now - lastShotTime < 0.2) return; // Cooldown
@@ -245,17 +252,19 @@ function shootBullet() {
     dir.applyQuaternion(plane.quaternion);
     bullets.push({ mesh: bullet, dir, time: 0 });
     scene.add(bullet);
+    shootSound.play();
 }
 
 // --- Explosions ---
 const explosions = [];
 function spawnExplosion(pos) {
-    const geo = new THREE.SphereGeometry(1.2, 16, 16);
+    const geo = new THREE.SphereGeometry(1.2, 16, 16); // Larger initial size
     const mat = new THREE.MeshBasicMaterial({ color: 0xff5522, transparent: true, opacity: 0.8 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.copy(pos);
     explosions.push({ mesh, time: 0 });
     scene.add(mesh);
+    explosionSound.play();
 }
 
 // --- Score ---
@@ -281,6 +290,91 @@ updateScoreUI();
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') shootBullet();
 });
+
+// --- Game State Management ---
+let gameState = 'start'; // 'start', 'playing', 'victory'
+
+function showOverlay(text, buttonText, onButton) {
+    let overlay = document.getElementById('game-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'game-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = 0;
+        overlay.style.left = 0;
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.background = 'rgba(0,0,0,0.7)';
+        overlay.style.display = 'flex';
+        overlay.style.flexDirection = 'column';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.zIndex = 1000;
+        overlay.style.color = 'white';
+        overlay.style.fontFamily = 'Arial, sans-serif';
+        overlay.style.fontSize = '2.5em';
+        overlay.style.transition = 'opacity 0.5s';
+        document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `<div style="margin-bottom: 30px;">${text}</div>`;
+    if (buttonText) {
+        const btn = document.createElement('button');
+        btn.textContent = buttonText;
+        btn.style.fontSize = '1em';
+        btn.style.padding = '10px 30px';
+        btn.style.borderRadius = '8px';
+        btn.style.border = 'none';
+        btn.style.background = '#44aaff';
+        btn.style.color = 'white';
+        btn.style.cursor = 'pointer';
+        btn.onclick = () => {
+            overlay.style.opacity = 0;
+            setTimeout(() => overlay.remove(), 500);
+            if (onButton) onButton();
+        };
+        overlay.appendChild(btn);
+    }
+    overlay.style.opacity = 1;
+}
+
+function hideOverlay() {
+    const overlay = document.getElementById('game-overlay');
+    if (overlay) {
+        overlay.style.opacity = 0;
+        setTimeout(() => overlay.remove(), 500);
+    }
+}
+
+function startGame() {
+    gameState = 'playing';
+    hideOverlay();
+    music.play();
+    // Reset game state if needed
+    // (Could respawn UFOs, reset score, etc.)
+    // For now, just continue
+    // TODO: Add music start here
+}
+
+function showVictory() {
+    gameState = 'victory';
+    showOverlay(`Victory!<br>Score: ${score}`, 'Restart', () => {
+        window.location.reload();
+    });
+    music.stop();
+    victorySound.play();
+    // TODO: Add victory sound/music here
+}
+
+// Show start overlay on load
+if (gameState === 'start') {
+    showOverlay('3D Plane Game<br><span style="font-size:0.6em;">Press any key to start</span>');
+    window.addEventListener('keydown', function anyKeyStart(e) {
+        if (gameState === 'start') {
+            startGame();
+            window.removeEventListener('keydown', anyKeyStart);
+        }
+    });
+}
 
 // Animation loop
 let lastTime = 0;
@@ -360,6 +454,17 @@ function animate(currentTime) {
             scene.remove(e.mesh);
             explosions.splice(i, 1);
         }
+    }
+    
+    // In animation loop, only allow controls and UI during 'playing'
+    if (gameState !== 'playing') {
+        renderer.render(scene, camera);
+        return;
+    }
+
+    // When all UFOs are destroyed, show victory
+    if (ufoAIs.length === 0 && gameState === 'playing') {
+        showVictory();
     }
     
     renderer.render(scene, camera);
