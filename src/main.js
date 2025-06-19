@@ -1,8 +1,10 @@
-import * as THREE from 'three';
+// Use global variables from CDN instead of ES6 imports
+const THREE = window.THREE;
+const { Howl, Howler } = window.Howler;
+
 import { PlaneController } from './PlaneController';
 import { CameraController } from './CameraController';
 import { UI } from './UI';
-import { Howl, Howler } from 'howler';
 
 // Scene setup
 const scene = new THREE.Scene();
