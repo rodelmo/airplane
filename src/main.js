@@ -2,9 +2,9 @@
 const THREE = window.THREE;
 const { Howl, Howler } = window.Howler;
 
-import { PlaneController } from './PlaneController';
-import { CameraController } from './CameraController';
-import { UI } from './UI';
+import { PlaneController } from './PlaneController.js';
+import { CameraController } from './CameraController.js';
+import { UI } from './UI.js';
 
 // Scene setup
 const scene = new THREE.Scene();
