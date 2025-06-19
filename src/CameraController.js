@@ -1,4 +1,5 @@
-import * as THREE from 'three';
+// Use global variable from CDN instead of ES6 import
+const THREE = window.THREE;
 
 export class CameraController {
     constructor(camera, plane) {
