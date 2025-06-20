@@ -1,6 +1,7 @@
 // Use global variables from CDN instead of ES6 imports
 const THREE = window.THREE;
-const { Howl, Howler } = window.Howler;
+const Howl = window.Howl;
+const Howler = window.Howler;
 
 import { PlaneController } from './PlaneController.js';
 import { CameraController } from './CameraController.js';
@@ -231,10 +232,10 @@ const bulletSpeed = 80;
 const bulletLifetime = 2; // seconds
 
 // --- Sound Effects ---
-const music = new Howl({ src: ['/public/music.mp3'], loop: true, volume: 0.5 });
-const shootSound = new Howl({ src: ['/public/shoot.wav'], volume: 0.5 });
-const explosionSound = new Howl({ src: ['/public/explosion.wav'], volume: 0.7 });
-const victorySound = new Howl({ src: ['/public/victory.wav'], volume: 0.7 });
+const music = new Howl({ src: ['./public/music.mp3'], loop: true, volume: 0.5 });
+const shootSound = new Howl({ src: ['./public/shoot.wav'], volume: 0.5 });
+const explosionSound = new Howl({ src: ['./public/explosion.wav'], volume: 0.7 });
+const victorySound = new Howl({ src: ['./public/victory.wav'], volume: 0.7 });
 
 function shootBullet() {
     const now = performance.now() / 1000;
